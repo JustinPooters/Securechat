@@ -1,45 +1,46 @@
 {
-  "name": "securechat-api",
-  "version": "1.0.0",
-  "description": "SecureChats api is used to supply chat information accross the board with custom api keys created in the MySQL database.",
-  "main": "index.js",
-  "dependencies": {
-    "dotenv": "^10.0.0",
-    "express": "^4.17.1",
-    "figlet": "^1.5.2",
-    "nodemon": "^2.0.14"
-  },
-  "devDependencies": {},
-  "scripts": {
-    "test": "nodemon index.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/justinpooters/securechat.git"
-  },
-  "keywords": [
-    "securechat",
-    "chatplatform",
-    "secure",
-    "chat",
-    "end2endencrypted",
-    "free",
-    "chat",
-    "chat",
-    "client",
-    "client",
-    "server",
-    "api",
-    "client",
-    "api",
-    "nodejs",
-    "node",
-    "discord"
-  ],
-  "author": "Justin Pooters",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/justinpooters/securechat/issues"
-  },
-  "homepage": "https://github.com/justinpooters/securechat#readme"
+    "name": "securechat-api",
+    "version": "1.0.0",
+    "description": "SecureChats api is used to supply chat information accross the board with custom api keys created in the MySQL database.",
+    "main": "index.js",
+    "dependencies": {
+        "dotenv": "^10.0.0",
+        "express": "^4.17.1",
+        "figlet": "^1.5.2",
+        "mysql": "^2.18.1",
+        "nodemon": "^2.0.14"
+    },
+    "devDependencies": {},
+    "scripts": {
+        "dev": "nodemon index.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/justinpooters/securechat.git"
+    },
+    "keywords": [
+        "securechat",
+        "chatplatform",
+        "secure",
+        "chat",
+        "end2endencrypted",
+        "free",
+        "chat",
+        "chat",
+        "client",
+        "client",
+        "server",
+        "api",
+        "client",
+        "api",
+        "nodejs",
+        "node",
+        "discord"
+    ],
+    "author": "Justin Pooters",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/justinpooters/securechat/issues"
+    },
+    "homepage": "https://github.com/justinpooters/securechat#readme"
 }

@@ -1,4 +1,9 @@
-function express() {
+const express = require("express");
+require('dotenv').config();
+const serverport = 3009;
+const app = express();
+
+function expressserver() {
 
     app.get('/', function(req, res) {
         con.connect(function(err) {
@@ -16,6 +21,6 @@ function express() {
     });
 
 }
-modules.export = {
-    load: express
+module.exports = {
+    load: expressserver
 }

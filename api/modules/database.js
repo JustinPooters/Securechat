@@ -1,6 +1,7 @@
 const { load } = require("dotenv");
+var mysql = require('mysql');
 
-function database() {
+function databaseconnection() {
     var con = mysql.createConnection({
         host: process.env.DB_HOST,
         user: process.env.DB_USER,
@@ -10,5 +11,5 @@ function database() {
 }
 
 module.exports = {
-    load: database
+    load: databaseconnection
 };

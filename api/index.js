@@ -5,7 +5,7 @@
 //    ____) |  __/ (__| |_| | | |  __/ |____| | | | (_| | |_  
 //   |_____/ \___|\___|\__,_|_|  \___|\_____|_| |_|\__,_|\__| 
 //                                                            
-//   Secure chat, maintained by Justin P.
+//   API | Secure chat, maintained by Justin P.
 //   Github: https://github.com/justinpooters/securechat
 //   Twitter: https://twitter.com/justinpooters
 //   Website: https://justinp.dev
@@ -24,8 +24,9 @@ const database = require("./modules/database");
 database.load();
 
 //EXPLAINATION: Create ASCII art welcome message into the console
-console.log(figlet.text("SecureChat"));
+const welcome = require("./modules/welcomemsg");
+welcome.load();
 
 // EXPLAINATION: Create the express server
-const express = require("./modules/express");
-express.load();
+const server = require("./modules/express");
+server.load();
