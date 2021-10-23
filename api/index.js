@@ -18,11 +18,6 @@ const serverport = 3009;
 const app = express();
 var mysql = require('mysql');
 
-
-//EXPLAINATION: Load database module
-const database = require("./modules/database");
-database.load();
-
 //EXPLAINATION: Create ASCII art welcome message into the console
 const welcome = require("./modules/welcomemsg");
 welcome.load();

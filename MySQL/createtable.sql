@@ -1,0 +1,1 @@
+CREATE TABLE `servicen_securechat`.`messages` ( `id` INT(255) NOT NULL AUTO_INCREMENT , `timestamp` INT(255) NOT NULL DEFAULT CURRENT_TIMESTAMP , `message` LONGTEXT NOT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB;

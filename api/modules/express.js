@@ -2,17 +2,33 @@ const express = require("express");
 require('dotenv').config();
 const serverport = 3009;
 const app = express();
+const mysql = require('mysql');
 
 function expressserver() {
 
-    app.get('/', function(req, res) {
-        con.connect(function(err) {
-            if (err) throw err;
-            con.query("SELECT * FROM messages", function(err, result, fields) {
+    // EXPLAINATION: load database
+    var con = mysql.createConnection({
+        host: process.env.DBHOST,
+        user: process.env.DBUSER,
+        password: process.env.DBPASS,
+        database: process.env.DBNAME
+    });
+
+    app.get('/1/messages', function(req, res) {
+        let getapiheader = req.get('x-api-key');
+        if (!getapiheader || getapiheader != process.env.APIKEY) {
+            res.send(401, 'No header found');
+        } else {
+            con.connect(function(err) {
                 if (err) throw err;
-                console.log(results);
+                con.query("SELECT * FROM messages", function(err, result, fields) {
+                    if (err) throw err;
+                    console.log(result);
+                    res.send(200, result);
+                });
             });
-        });
+        }
+
 
     });
 
