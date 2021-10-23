@@ -14,18 +14,16 @@ function expressserver() {
         database: process.env.DBNAME
     });
 
+    con.connect();
     app.get('/1/messages', function(req, res) {
         let getapiheader = req.get('x-api-key');
         if (!getapiheader || getapiheader != process.env.APIKEY) {
-            res.send(401, 'No header found');
+            res.send(401, 'Not Authorized.');
         } else {
-            con.connect(function(err) {
+            con.query("SELECT * FROM messages", function(err, result, fields) {
                 if (err) throw err;
-                con.query("SELECT * FROM messages", function(err, result, fields) {
-                    if (err) throw err;
-                    console.log(result);
-                    res.send(200, result);
-                });
+                console.log(result);
+                res.send(200, result);
             });
         }
 
