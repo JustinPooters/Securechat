@@ -6,6 +6,8 @@ const app = express();
 const bodyParser = require('body-parser')
 const mysql = require('mysql');
 const crypto = require("crypto");
+const { resourceLimits } = require("worker_threads");
+const { CONNREFUSED } = require("dns");
 const algorithm = 'aes-256-ctr';
 const password = process.env.CRYPTPASS;
 const key = crypto.scryptSync(password, 'salt', 32);
@@ -30,6 +32,7 @@ function expressserver() {
     app.get('/test', function(req, res) {
         res.send(200, Date.now());
     });
+
     app.get('/1/messages', function(req, res) {
         let getapiheader = req.get('x-api-key');
         if (!getapiheader || getapiheader != process.env.APIKEY) {
@@ -37,25 +40,48 @@ function expressserver() {
         } else {
             con.query("SELECT * FROM messages", function(err, result, fields) {
                 if (err) throw err;
-                console.log(result);
                 res.send(200, result);
             });
         }
     });
 
-    app.post('/v1/createchannel', function(req, res) {
+    app.get('/1/getchannelmessages', function(req, res) {
+        let getapiheader = req.get('x-api-key');
+        if (!getapiheader || getapiheader != process.env.APIKEY) {
+            res.send(401, 'Not Authorized.');
+        } else {
+            if (!req.body.channelid) {
+                res.send(400, 'Missing channelid');
+            } else {
+                con.query(`SELECT * FROM messages WHERE channelid=${req.body.channelid}`, function(err, result, fields) {
+                    if (err) throw err;
+                    res.send(200, result);
+                });
+            }
+        }
+    });
+
+    app.post('/1/createchannel', function(req, res) {
         let getapiheader = req.get('x-api-key');
         if (!getapiheader || getapiheader != process.env.APIKEY) {
             res.send(401, 'Not Authorized.');
         } else {
             let channelname = req.body.channelname;
+            let userid = req.body.userid;
             if (!channelname) {
                 res.send(400, 'No channel name is given.');
             } else {
-                con.query("INSERT INTO channels (channelname) VALUES ('" + channelname + "')", function(err, result, fields) {
+                con.query("INSERT INTO channels (name) VALUES ('" + channelname + "')", function(err, result, fields) {
                     if (err) throw err;
-                    console.log(result);
-                    res.send(200, 'Channel created succesfully');
+                    con.query("SELECT * FROM channels WHERE name = '" + channelname + "' ORDER BY id DESC LIMIT 1", function(err, result, fields) {
+                        let channelid = result[0].id;
+                        con.query("INSERT INTO channelpermissions (channelid, userid) VALUES ('" + channelid + "','" + userid + "')", function(err, result, fields) {
+                            if (err) throw err;
+
+                            res.send(200, 'Channel created succesfully');
+                        });
+
+                    });
                 });
             }
         }
@@ -82,10 +108,16 @@ function expressserver() {
                             if (result.length == 0) {
                                 return res.send(400, 'No channel found with that ID.');
                             } else {
-                                con.query("INSERT INTO messages (timestamp, message, author) VALUES ('" + Date.now() + "'," + message + "', " + userid + ")", function(err, result, fields) {
+                                con.query(`SELECT * FROM channelpermissions where channelid=${channelid} AND userid=${userid}`, function(err, result, fields) {
                                     if (err) throw err;
-                                    res.send(200, 'Message sent.');
-
+                                    if (result.length == 0) {
+                                        return res.send(400, 'You are not allowed to send messages to this channel.');
+                                    } else {
+                                        con.query("INSERT INTO messages (timestamp, message, author, channelid) VALUES ('" + Date.now() + "','" + message + "','" + userid + "','" + channelid + "')", function(err, result, fields) {
+                                            if (err) throw err;
+                                            res.send(200, 'Message sent succesfully');
+                                        });
+                                    }
                                 });
                             }
                         });
@@ -119,6 +151,84 @@ function expressserver() {
                         });
                     } else {
                         return res.send(400, 'Username already taken.');
+                    }
+                });
+            }
+        }
+    });
+
+    app.post('/1/addchanneluser', function(req, res) {
+        let getapiheader = req.get('x-api-key');
+        if (!getapiheader || getapiheader != process.env.APIKEY) {
+            res.send(401, 'Not Authorized.');
+        } else {
+            if (!req.body.userid || !req.body.channelid) {
+                return res.send(400, 'No userid or channelid provided.');
+            } else {
+                let userid = req.body.userid;
+                let channelid = req.body.channelid;
+                con.query("SELECT * FROM users WHERE ID=" + userid, function(err, result, fields) {
+                    if (err) throw err;
+                    if (result.length == 0) {
+                        return res.send(400, 'No user found with that ID.');
+                    } else {
+                        con.query("SELECT * FROM channels WHERE ID=" + channelid, function(err, result, fields) {
+                            if (err) throw err;
+                            if (result.length == 0) {
+                                return res.send(400, 'No channel found with that ID.');
+                            } else {
+                                con.query("SELECT * FROM channelpermissions WHERE channelid=" + channelid + " AND userid=" + userid, function(err, result, fields) {
+                                    if (err) throw err;
+                                    if (result.length == 0) {
+                                        con.query("INSERT INTO channelpermissions (channelid, userid) VALUES ('" + channelid + "','" + userid + "')", function(err, result, fields) {
+                                            if (err) throw err;
+                                            res.send(200, 'User added to channel.');
+                                        });
+                                    } else {
+                                        return res.send(400, 'User already in channel.');
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+        }
+    });
+
+    app.post('/1/removechanneluser', function(req, res) {
+        let getapiheader = req.get('x-api-key');
+        if (!getapiheader || getapiheader != process.env.APIKEY) {
+            res.send(401, 'Not Authorized.');
+        } else {
+            if (!req.body.userid || !req.body.channelid) {
+                return res.send(400, 'No userid or channelid provided.');
+            } else {
+                let userid = req.body.userid;
+                let channelid = req.body.channelid;
+                con.query("SELECT * FROM users WHERE ID=" + userid, function(err, result, fields) {
+                    if (err) throw err;
+                    if (result.length == 0) {
+                        return res.send(400, 'No user found with that ID.');
+                    } else {
+                        con.query("SELECT * FROM channels WHERE ID=" + channelid, function(err, result, fields) {
+                            if (err) throw err;
+                            if (result.length == 0) {
+                                return res.send(400, 'No channel found with that ID.');
+                            } else {
+                                con.query("SELECT * FROM channelpermissions WHERE channelid=" + channelid + " AND userid=" + userid, function(err, result, fields) {
+                                    if (err) throw err;
+                                    if (result.length == 0) {
+                                        return res.send(400, 'User not in channel.');
+                                    } else {
+                                        con.query("DELETE FROM channelpermissions WHERE channelid=" + channelid + " AND userid=" + userid, function(err, result, fields) {
+                                            if (err) throw err;
+                                            res.send(200, 'User removed from channel.');
+                                        });
+                                    }
+                                });
+                            }
+                        });
                     }
                 });
             }
